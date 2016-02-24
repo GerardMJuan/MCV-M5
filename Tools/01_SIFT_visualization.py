@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 
-ima=cv2.imread('../../Databases/MIT_split/train/forest/cdmc101.jpg')
+ima=cv2.imread('../MIT_split/train/forest/cdmc101.jpg')
 gray=cv2.cvtColor(ima,cv2.COLOR_BGR2GRAY)
 
 detector=cv2.FeatureDetector_create('SIFT')
