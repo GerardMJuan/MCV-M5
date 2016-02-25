@@ -2,6 +2,7 @@ import sys
 import cv2
 import glob
 import numpy as np
+import matplotlib.pyplot as plt
 import cPickle
 import time
 import random
@@ -10,7 +11,7 @@ from sklearn import cross_validation
 from sklearn import svm
 from sklearn.grid_search import GridSearchCV
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.decomposition import PCA
 
 
@@ -146,10 +147,12 @@ def trainAndTestLinearSVM(train,test,GT_train,GT_test,c):
 	stdSlr = StandardScaler().fit(train)
 	train = stdSlr.transform(train)
 	clf = svm.SVC(kernel='linear', C=c).fit(train, GT_train)
+ 	pred = clf.predict(test)
+ 	cm = confusion_matrix(GT_test, pred)
 	accuracy = 100*clf.score(stdSlr.transform(test), GT_test)
 	end=time.time()
 	print 'Done in '+str(end-init)+' secs.'
-	return accuracy
+	return accuracy,cm
 
 def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,numparams):
 	print 'Training and Testing a HI SVM'
@@ -165,9 +168,10 @@ def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,
 	SVMpredictions = clf.predict(predictMatrix)
 	correct = sum(1.0 * (SVMpredictions == GT_test))
 	accuracy = correct / len(GT_test)
+ 	cm = confusion_matrix(GT_test, SVMpredictions)
 	end=time.time()
 	print 'Done in '+str(end-init)+' secs.'
-	return accuracy
+	return accuracy,cm
 
 def histogramIntersection(M, N):
 	m = M.shape[0]
@@ -257,3 +261,22 @@ def trainAndTestSPMSVM_withfolds(train,test,GT_train,GT_test,k,folds):
 	end=time.time()
 	print 'Done in '+str(end-init)+' secs.'
 	return accuracy
+ 
+def plot_confusion_matrix(cm, names, title='Confusion matrix', cmap=plt.cm.Blues):
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(names))
+    plt.xticks(tick_marks, names, rotation=45)
+    plt.yticks(tick_marks, names)
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    
+def unique_elements(seq): 
+   # order preserving
+   checked = []
+   for e in seq:
+       if e[5:] not in checked:
+           checked.append(e[5:])
+   return checked
