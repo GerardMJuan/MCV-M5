@@ -1,7 +1,7 @@
 from BOVW_functions import *
 
-detector='HOG'
-descriptor='HOG'
+detector='LBP'
+descriptor='LBP'
 num_samples=50000
 
 # Parameters for SIFT

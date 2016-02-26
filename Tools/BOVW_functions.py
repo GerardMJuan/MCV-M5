@@ -64,7 +64,6 @@ def getKeypointsDescriptors(filenames,detector_type,descriptor_type):
 
 
 def extractLBPfeatures(img):
-
     lbp = local_binary_pattern(img, cfg.lbp_n_points, cfg.lbp_radius, cfg.lbp_METHOD)
     lbp_windows = view_as_windows(lbp, window_shape=cfg.lbp_win_shape, step=cfg.lbp_win_step)
     features = []
@@ -123,6 +122,7 @@ def getAndSaveCodebook(descriptors,num_samples,k,filename):
         A[i,:]=random.choice(random.choice(descriptors))
     print 'Computing kmeans on '+str(num_samples)+' samples with '+str(k)+' centroids'
     init=time.time()
+    A = vq.whiten(A)
     codebook,v=vq.kmeans(A,k,1)
     end=time.time()
     print 'Done in '+str(end-init)+' secs.'
@@ -130,7 +130,7 @@ def getAndSaveCodebook(descriptors,num_samples,k,filename):
     return codebook
 
 def getAndSaveBoVWRepresentation(descriptors,k,codebook,filename):
-    print 'Extracting visual word repres entations'
+    print 'Extracting visual word representations'
     init=time.time()
     visual_words=np.zeros((len(descriptors),k),dtype=np.float32)
     for i in xrange(len(descriptors)):
