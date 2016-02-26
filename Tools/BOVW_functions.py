@@ -8,6 +8,7 @@ import random
 import scipy.cluster.vq as vq
 from sklearn import cross_validation
 from sklearn import svm
+from sklearn import neighbors
 from sklearn.grid_search import GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix
@@ -140,6 +141,36 @@ def getAndSaveBoVW_SPMRepresentation(descriptors,keypoints,k,codebook,filename,f
 	cPickle.dump(visual_words, open(filename, "wb"))
 	return visual_words
 
+def trainAndTestKNeighborsClassifier(train,test,GT_train,GT_test,k):
+	#http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn.neighbors.KNeighborsClassifier
+	print 'Training and Testing a KNN'
+	init 		= time.time()
+	stdSlr 		= StandardScaler().fit(train)
+	train 		= stdSlr.transform(train)
+	neigh 		= neighbors.KNeighborsClassifier(n_neighbors=k).fit(train, GT_train)
+	accuracy 	= 100*neigh.score(stdSlr.transform(test), GT_test)
+	end 		= time.time()
+	print 'Done in '+str(end-init)+' secs.'
+	return accuracy
+
+def trainAndTestKNeighborsClassifier_withfolds(train,test,GT_train,GT_test,folds,k):
+	print 'Training and Testing a KNN (with folds)'
+	init 				= time.time()
+	stdSlr 				= StandardScaler().fit(train)
+	train 				= stdSlr.transform(train)
+	kernelMatrix 		= histogramIntersection(train, train)
+	tuned_parameters 	= [{'n_neighbors': [k]}]
+	neigh 				= GridSearchCV(neighbors.KNeighborsClassifier(),tuned_parameters,cv	= folds,scoring='accuracy')
+	neigh.fit(kernelMatrix, GT_train)
+	print(neigh.best_params_)
+	predictMatrix 		= histogramIntersection(stdSlr.transform(test), train)
+	NNpredictions 		= neigh.predict(predictMatrix)
+	correct 			= sum(1.0 * (NNpredictions == GT_test))
+	accuracy 			= correct / len(GT_test)
+	end					= time.time()
+	print 'Done in '+str(end-init)+' secs.'
+	return accuracy
+	
 def trainAndTestLinearSVM(train,test,GT_train,GT_test,c):
 	print 'Training and Testing a linear SVM'
 	init=time.time()
