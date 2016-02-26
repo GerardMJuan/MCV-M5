@@ -30,10 +30,16 @@ filenames_test,GT_ids_test,GT_labels_test = prepareFiles('../MIT_split/test/')
 KPTS_test,DSC_test = getKeypointsDescriptors(filenames_test,detector,descriptor)
 VW_test=getAndSaveBoVWRepresentation(DSC_test,k,CB,visual_words_filename_test)
 
+<<<<<<< HEAD
 if classifier == 'KNN':
 	ac_BOVW_L = trainAndTestKNeighborsClassifier_withfolds(VW_train,VW_test,GT_ids_train,GT_ids_test,folds,k)
 elif classifier == 'LinearSVM':
 	ac_BOVW_L = trainAndTestLinearSVM_withfolds(VW_train,VW_test,GT_ids_train,GT_ids_test,folds,start,end,numparams)
 
+=======
+ac_BOVW_L,cm = trainAndTestLinearSVM_withfolds(VW_train,VW_test,GT_ids_train,GT_ids_test,folds,start,end,numparams)
+names = unique_elements(GT_labels_test)
+plot_confusion_matrix(cm,names)
+>>>>>>> origin/master
 print 'Accuracy BOVW: '+str(ac_BOVW_L)
 

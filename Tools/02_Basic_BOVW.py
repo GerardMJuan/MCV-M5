@@ -21,13 +21,24 @@ CB=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename)
 VW_train=getAndSaveBoVWRepresentation(DSC_train,k,CB,visual_words_filename_train)
 #VW_train=cPickle.load(open(visual_words_filename_train,'r'))
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
 filenames_test,GT_ids_test,GT_labels_test = prepareFiles('../MIT_split/test/')
 KPTS_test,DSC_test = getKeypointsDescriptors(filenames_test,detector,descriptor)
 VW_test=getAndSaveBoVWRepresentation(DSC_test,k,CB,visual_words_filename_test)
 
+<<<<<<< HEAD
 if classifier == 'KNN':
 	ac_BOVW_L = trainAndTestKNeighborsClassifier_withfolds(VW_train,VW_test,GT_ids_train,GT_ids_test,k)
 elif classifier == 'LinearSVM':
 	ac_BOVW_L = trainAndTestLinearSVM(VW_train,VW_test,GT_ids_train,GT_ids_test,C)
 
 print 'Accuracy BOVW: '+str(ac_BOVW_L)
+=======
+ac_BOVW_L, cm = trainAndTestLinearSVM(VW_train,VW_test,GT_ids_train,GT_ids_test,C)
+names = unique_elements(GT_labels_test)
+plot_confusion_matrix(cm,names)
+print 'Accuracy BOVW: '+str(ac_BOVW_L)
+>>>>>>> origin/master
