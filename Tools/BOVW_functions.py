@@ -2,6 +2,7 @@ import sys
 import cv2
 import glob
 import numpy as np
+import matplotlib.pyplot as plt
 import cPickle
 import time
 import Config as cfg
@@ -9,13 +10,13 @@ import random
 import scipy.cluster.vq as vq
 from sklearn import cross_validation
 from sklearn import svm
+from sklearn import neighbors
 from sklearn.grid_search import GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from skimage.feature import local_binary_pattern
 from skimage.util import view_as_windows
-
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve
 from sklearn.decomposition import PCA
 
 
@@ -181,16 +182,48 @@ def getAndSaveBoVW_SPMRepresentation(descriptors,keypoints,k,codebook,filename,f
     cPickle.dump(visual_words, open(filename, "wb"))
     return visual_words
 
+def trainAndTestKNeighborsClassifier(train,test,GT_train,GT_test,k):
+    #http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn.neighbors.KNeighborsClassifier
+    print 'Training and Testing a KNN'
+    init 		= time.time()
+    stdSlr 		= StandardScaler().fit(train)
+    train 		= stdSlr.transform(train)
+    neigh 		= neighbors.KNeighborsClassifier(n_neighbors=k).fit(train, GT_train)
+    accuracy 	= 100*neigh.score(stdSlr.transform(test), GT_test)
+    end 		= time.time()
+    print 'Done in '+str(end-init)+' secs.'
+    return accuracy
+
+def trainAndTestKNeighborsClassifier_withfolds(train,test,GT_train,GT_test,folds,k):
+    print 'Training and Testing a KNN (with folds)'
+    init 				= time.time()
+    stdSlr 				= StandardScaler().fit(train)
+    train 				= stdSlr.transform(train)
+    kernelMatrix 		= histogramIntersection(train, train)
+    tuned_parameters 	= [{'n_neighbors': [k]}]
+    neigh 				= GridSearchCV(neighbors.KNeighborsClassifier(),tuned_parameters,cv	= folds,scoring='accuracy')
+    neigh.fit(kernelMatrix, GT_train)
+    print(neigh.best_params_)
+    predictMatrix 		= histogramIntersection(stdSlr.transform(test), train)
+    NNpredictions 		= neigh.predict(predictMatrix)
+    correct 			= sum(1.0 * (NNpredictions == GT_test))
+    accuracy 			= correct / len(GT_test)
+    end					= time.time()
+    print 'Done in '+str(end-init)+' secs.'
+    return accuracy
+
 def trainAndTestLinearSVM(train,test,GT_train,GT_test,c):
     print 'Training and Testing a linear SVM'
     init=time.time()
     stdSlr = StandardScaler().fit(train)
     train = stdSlr.transform(train)
     clf = svm.SVC(kernel='linear', C=c).fit(train, GT_train)
+    pred = clf.predict(test)
+    cm = confusion_matrix(GT_test, pred)
     accuracy = 100*clf.score(stdSlr.transform(test), GT_test)
     end=time.time()
     print 'Done in '+str(end-init)+' secs.'
-    return accuracy
+    return accuracy,cm
 
 def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,numparams):
     print 'Training and Testing a HI SVM'
@@ -206,9 +239,10 @@ def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,
     SVMpredictions = clf.predict(predictMatrix)
     correct = sum(1.0 * (SVMpredictions == GT_test))
     accuracy = correct / len(GT_test)
+    cm = confusion_matrix(GT_test, SVMpredictions)
     end=time.time()
     print 'Done in '+str(end-init)+' secs.'
-    return accuracy
+    return accuracy,cm
 
 def histogramIntersection(M, N):
     m = M.shape[0]
@@ -298,3 +332,22 @@ def trainAndTestSPMSVM_withfolds(train,test,GT_train,GT_test,k,folds):
     end=time.time()
     print 'Done in '+str(end-init)+' secs.'
     return accuracy
+ 
+def plot_confusion_matrix(cm, names, title='Confusion matrix', cmap=plt.cm.Blues):
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(names))
+    plt.xticks(tick_marks, names, rotation=45)
+    plt.yticks(tick_marks, names)
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+def unique_elements(seq): 
+   # order preserving
+   checked = []
+   for e in seq:
+       if e[5:] not in checked:
+           checked.append(e[5:])
+   return checked
