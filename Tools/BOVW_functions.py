@@ -220,13 +220,15 @@ def trainAndTestLinearSVM(train,test,GT_train,GT_test,c):
     clf = svm.SVC(kernel='linear', C=c).fit(train, GT_train)
     pred = clf.predict(test)
     cm = confusion_matrix(GT_test, pred)
-    accuracy = 100*clf.score(stdSlr.transform(test), GT_test)
+    sc = clf.score(stdSlr.transform(test), GT_test)
+    accuracy = 100*sc
     end=time.time()
+    fpr, tpr, thresholds = roc_curve(np.asarray(GT_test).ravel(), pred.ravel(), pos_label=2)
     print 'Done in '+str(end-init)+' secs.'
-    return accuracy,cm
+    return accuracy,cm,fpr,tpr
 
 def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,numparams):
-    print 'Training and Testing a HI SVM'
+    print 'Training and Testing a Linear SVM'
     init=time.time()
     stdSlr = StandardScaler().fit(train)
     train = stdSlr.transform(train)
@@ -241,8 +243,9 @@ def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,
     accuracy = correct / len(GT_test)
     cm = confusion_matrix(GT_test, SVMpredictions)
     end=time.time()
+    fpr, tpr, thresholds = roc_curve(np.asarray(GT_test).ravel(), SVMpredictions.ravel(), pos_label=2)
     print 'Done in '+str(end-init)+' secs.'
-    return accuracy,cm
+    return accuracy,cm,fpr,tpr
 
 def histogramIntersection(M, N):
     m = M.shape[0]
