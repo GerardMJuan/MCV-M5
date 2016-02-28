@@ -37,9 +37,10 @@ def prepareFiles(rootpath):
     return(filenames,GT_ids,GT_labels)
 
 def getKeypointsDescriptors(filenames,detector_type,descriptor_type):
-    if detector_type == 'SIFT':
-        detector=cv2.FeatureDetector_create(detector_type)
+    detector=cv2.FeatureDetector_create(detector_type)
+    if descriptor_type == 'SIFT':
         descriptor = cv2.DescriptorExtractor_create(descriptor_type)
+
     K=[]
     D=[]
     print 'Extracting Local Descriptors'
@@ -47,23 +48,23 @@ def getKeypointsDescriptors(filenames,detector_type,descriptor_type):
     for filename in filenames:
         ima=cv2.imread(filename)
         gray=cv2.cvtColor(ima,cv2.COLOR_BGR2GRAY)
-        if detector_type == 'SIFT':
+        if descriptor_type == 'SIFT':
             kpts=detector.detect(gray)
             kpts,des=descriptor.compute(gray,kpts)
             K.append(kpts)
             D.append(des)
-        elif detector_type == 'HOG':
-            des = extractHOGfeatures(gray)
+        elif descriptor_type == 'HOG':
+            des = extractHOGfeatures(gray, detector)
             D.append(des)
-        elif detector_type == 'LBP':
-            des = extractLBPfeatures(gray)
+        elif descriptor_type == 'LBP':
+            des = extractLBPfeatures(gray, detector)
             D.append(des)
     end=time.time()
     print 'Done in '+str(end-init)+' secs.'
     return(K,D)
 
 
-def extractLBPfeatures(img):
+def extractLBPfeatures(img, detector):
     lbp = local_binary_pattern(img, cfg.lbp_n_points, cfg.lbp_radius, cfg.lbp_METHOD)
     lbp_windows = view_as_windows(lbp, window_shape=cfg.lbp_win_shape, step=cfg.lbp_win_step)
     features = []
@@ -76,17 +77,27 @@ def extractLBPfeatures(img):
             features.append(lbp_hist_l1sqrtnorm)
             count += 1
     #features_flatten = [item for sublist in features for item in sublist]
+    features = np.asarray(features)
     return features
 
-def extractHOGfeatures(img):
-
-    fd = hog(img,
-             orientations=cfg.hog_orientations,
-             pixels_per_cell=cfg.hog_pixels_per_cell,
-             cells_per_block=cfg.hog_cells_per_block,
-             visualise=False,
-             normalise=cfg.hog_normalise)
-    fd = np.reshape(fd, (-1,cfg.hog_cells_per_block_total*cfg.hog_orientations))
+def extractHOGfeatures(img, detector):
+    winSize = (64,64)
+    blockSize = (16,16)
+    blockStride = (8,8)
+    cellSize = (8,8)
+    nbins = 9
+    hog = cv2.HOGDescriptor(winSize,blockSize,blockStride,cellSize,nbins)
+    kpts = detector.detect(img)
+    loc = [(int(x.pt[0]),int(x.pt[1])) for x in kpts]
+    loc = tuple(loc)
+    fd = hog.compute(img,hog.blockStride,hog.cellSize,loc)
+    #fd = hog(img,
+    #         orientations=cfg.hog_orientations,
+    #         pixels_per_cell=cfg.hog_pixels_per_cell,
+    #         cells_per_block=cfg.hog_cells_per_block,
+    #         visualise=False,
+    #         normalise=cfg.hog_normalise)
+    #fd = np.reshape(fd, (cfg.hog_cells_per_block_total*cfg.hog_orientations,-1))
     return fd
 
 def getLocalColorDescriptors(filenames, keypoints):
@@ -336,7 +347,7 @@ def trainAndTestSPMSVM_withfolds(train,test,GT_train,GT_test,k,folds):
     print 'Done in '+str(end-init)+' secs.'
     return accuracy
  
-def plot_confusion_matrix(cm, names, title='Confusion matrix', cmap=plt.cm.Blues):
+def plot_confusion_matrix(cm, names, savename, title='Confusion matrix', cmap=plt.cm.Blues):
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
@@ -346,6 +357,8 @@ def plot_confusion_matrix(cm, names, title='Confusion matrix', cmap=plt.cm.Blues
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    plt.savefig(savename)
+    plt.close()
 
 def unique_elements(seq): 
    # order preserving

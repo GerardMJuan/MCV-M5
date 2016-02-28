@@ -1,28 +1,16 @@
 from BOVW_functions import *
 from sklearn.metrics import roc_curve, auc
 
-detector='LBP'
-descriptor='LBP'
+detector='SIFT'
+descriptor='HOG'
 num_samples=50000
-
-# Parameters for SIFT
-k=32
-
-
-# Parameters for HOG
-
-
-
-# Parameters for LBP
-
-
 k=32 # KNN parameter
-folds=5
+folds = 5
 start=0.01
 end=10
 numparams=30
-
-classifier='KNN' # Choose between KNN and linearSVM
+classifier='LinearSVM' # Choose between KNN and linearSVM
+text_file = open("Output_hog_lin.txt", "a")
 
 codebook_filename='CB_'+detector+'_'+descriptor+'_'+str(num_samples)+'samples_'+str(k)+'centroids.dat'
 visual_words_filename_train='VW_train_'+detector+'_'+descriptor+'_'+str(num_samples)+'samples_'+str(k)+'centroids.dat'
@@ -48,9 +36,10 @@ elif classifier == 'LinearSVM':
     ac_BOVW_L,cm,fpr,tpr = trainAndTestLinearSVM_withfolds(VW_train,VW_test,GT_ids_train,GT_ids_test,folds,start,end,numparams)
 
 names = unique_elements(GT_labels_test)
-plot_confusion_matrix(cm,names)
-print 'Accuracy BOVW: '+str(ac_BOVW_L)
-
+savename = str(folds) + 'hog_cm_lin.png'
+plot_confusion_matrix(cm,names,savename)
+s = 'For hog_lin The accuracy is ' + str(ac_BOVW_L)
+text_file.write(s)
 
 roc_auc = auc(fpr, tpr)
 
@@ -58,10 +47,10 @@ plt.figure()
 plt.plot(fpr, tpr,
          label='micro-average ROC curve (area = {0:0.2f})'
                ''.format(roc_auc))
-#for i in range(8):
+#for i in range(8):w
 #    plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
 #                                   ''.format(i, roc_auc[i]))
-
+save = str(folds) +'_lin.png'
 plt.plot([0, 1], [0, 1], 'k--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
@@ -69,5 +58,5 @@ plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.title('Some extension of Receiver operating characteristic to multi-class')
 plt.legend(loc="lower right")
-plt.show()
-
+plt.savefig(save)
+plt.close()
