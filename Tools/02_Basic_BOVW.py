@@ -5,7 +5,7 @@ detector='SIFT'
 descriptor='SIFT'
 num_samples=50000
 
-k=32 # KNN parameter
+k=5000 # KNN parameter
 C=1 # LinearSVM parameter
 
 classifier='LinearSVM' # Choose between KNN and LinearSVM
@@ -29,21 +29,24 @@ VW_test=getAndSaveBoVWRepresentation(DSC_test,k,CB,visual_words_filename_test)
 if classifier == 'KNN':
 	ac_BOVW_L = trainAndTestKNeighborsClassifier(VW_train,VW_test,GT_ids_train,GT_ids_test,k)
 elif classifier == 'LinearSVM':
-	ac_BOVW_L,cm,fpr,tpr = trainAndTestLinearSVM(VW_train,VW_test,GT_ids_train,GT_ids_test,C)
+	ac_BOVW_L,cm,fpr,tpr,roc_auc = trainAndTestLinearSVM(VW_train,VW_test,GT_ids_train,GT_ids_test,C)
 
 names = unique_elements(GT_labels_test)
-plot_confusion_matrix(cm,names)
+savename = 'cm.png'
+plot_confusion_matrix(cm,names,savename)
 print 'Accuracy BOVW: '+str(ac_BOVW_L)
 
-roc_auc = auc(fpr, tpr)
+plt.figure()
 
 plt.figure()
-plt.plot(fpr, tpr,
-         label='micro-average ROC curve (area = {0:0.2f})'
-               ''.format(roc_auc))
-#for i in range(8):
-#    plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
-#                                   ''.format(i, roc_auc[i]))
+plt.plot(fpr["macro"], tpr["macro"],
+     label='macro-average ROC curve (area = {0:0.2f})'
+           ''.format(roc_auc["macro"]),
+     linewidth=2)
+
+for i in range(8):
+    plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
+                                   ''.format(i, roc_auc[i]))
 
 plt.plot([0, 1], [0, 1], 'k--')
 plt.xlim([0.0, 1.0])

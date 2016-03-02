@@ -7,6 +7,7 @@ import cPickle
 import time
 import Config as cfg
 import random
+from PIL import Image
 import scipy.cluster.vq as vq
 from sklearn import cross_validation
 from sklearn import svm
@@ -16,9 +17,13 @@ from sklearn.preprocessing import StandardScaler
 from skimage.feature import hog
 from skimage.feature import local_binary_pattern
 from skimage.util import view_as_windows
-from sklearn.metrics import confusion_matrix, roc_curve
+from sklearn.metrics import confusion_matrix, roc_curve, auc
 from sklearn.decomposition import PCA
-
+from sklearn.preprocessing import label_binarize, LabelBinarizer
+from sklearn.multiclass import OneVsRestClassifier
+from joblib import Parallel, delayed
+from joblib import load, dump
+from scipy import interp
 
 
 def prepareFiles(rootpath):
@@ -40,9 +45,8 @@ def getKeypointsDescriptors(filenames,detector_type,descriptor_type):
     detector=cv2.FeatureDetector_create(detector_type)
     if descriptor_type == 'SIFT':
         descriptor = cv2.DescriptorExtractor_create(descriptor_type)
-
-    K=[]
-    D=[]
+    K = []
+    D = []
     print 'Extracting Local Descriptors'
     init=time.time()
     for filename in filenames:
@@ -60,6 +64,7 @@ def getKeypointsDescriptors(filenames,detector_type,descriptor_type):
             des = extractLBPfeatures(gray, detector)
             D.append(des)
     end=time.time()
+
     print 'Done in '+str(end-init)+' secs.'
     return(K,D)
 
@@ -69,13 +74,19 @@ def extractLBPfeatures(img, detector):
     lbp_windows = view_as_windows(lbp, window_shape=cfg.lbp_win_shape, step=cfg.lbp_win_step)
     features = []
     count = 0
-    for windows_list in lbp_windows:
-        for window in windows_list:
-            lbp_hist, bin_edges = np.histogram(window, bins=cfg.lbp_n_bins)
-            lbp_hist_norm = sum(abs(lbp_hist))
-            lbp_hist_l1sqrtnorm = np.sqrt(lbp_hist/float(lbp_hist_norm))
-            features.append(lbp_hist_l1sqrtnorm)
-            count += 1
+    ws = cfg.lbp_win_shape[1]
+    kpts = detector.detect(img)
+    loc = [(int(x.pt[0]),int(x.pt[1])) for x in kpts]
+    for poi in loc:
+        window = Image.fromarray(img).crop((poi[0]-ws,poi[1]-ws,poi[0]+ws,poi[1]+ws))
+        window = np.array(window)
+ #   for windows_list in lbp_windows:
+#       for window in windows_list:
+        lbp_hist, bin_edges = np.histogram(window, bins=cfg.lbp_n_bins)
+        lbp_hist_norm = sum(abs(lbp_hist))
+        lbp_hist_l1sqrtnorm = np.sqrt(lbp_hist/float(lbp_hist_norm))
+        features.append(lbp_hist_l1sqrtnorm)
+        count += 1
     #features_flatten = [item for sublist in features for item in sublist]
     features = np.asarray(features)
     return features
@@ -96,8 +107,6 @@ def extractHOGfeatures(img, detector):
     #         pixels_per_cell=cfg.hog_pixels_per_cell,
     #         cells_per_block=cfg.hog_cells_per_block,
     #         visualise=False,
-    #         normalise=cfg.hog_normalise)
-    #fd = np.reshape(fd, (cfg.hog_cells_per_block_total*cfg.hog_orientations,-1))
     return fd
 
 def getLocalColorDescriptors(filenames, keypoints):
@@ -201,9 +210,13 @@ def trainAndTestKNeighborsClassifier(train,test,GT_train,GT_test,k):
     train 		= stdSlr.transform(train)
     neigh 		= neighbors.KNeighborsClassifier(n_neighbors=k).fit(train, GT_train)
     accuracy 	= 100*neigh.score(stdSlr.transform(test), GT_test)
+    assert isinstance(test, object)
+    pred 		= neigh.predict(test)
+    cm 			= confusion_matrix(GT_test, pred)
+    fpr, tpr, thresholds = roc_curve(np.asarray(GT_test).ravel(), pred.ravel(), pos_label=2)
     end 		= time.time()
     print 'Done in '+str(end-init)+' secs.'
-    return accuracy
+    return accuracy, cm, fpr, tpr
 
 def trainAndTestKNeighborsClassifier_withfolds(train,test,GT_train,GT_test,folds,k):
     print 'Training and Testing a KNN (with folds)'
@@ -219,24 +232,49 @@ def trainAndTestKNeighborsClassifier_withfolds(train,test,GT_train,GT_test,folds
     NNpredictions 		= neigh.predict(predictMatrix)
     correct 			= sum(1.0 * (NNpredictions == GT_test))
     accuracy 			= correct / len(GT_test)
+    assert isinstance(test, object)
+    cm 					= confusion_matrix(GT_test, NNpredictions)
+    fpr, tpr, thresholds= roc_curve(np.asarray(GT_test).ravel(), NNpredictions.ravel(), pos_label=2)
     end					= time.time()
     print 'Done in '+str(end-init)+' secs.'
-    return accuracy
+    return accuracy, cm, fpr, tpr
 
 def trainAndTestLinearSVM(train,test,GT_train,GT_test,c):
     print 'Training and Testing a linear SVM'
     init=time.time()
     stdSlr = StandardScaler().fit(train)
     train = stdSlr.transform(train)
-    clf = svm.SVC(kernel='linear', C=c).fit(train, GT_train)
+    clf = svm.SVC(kernel='linear', C=c, decision_function_shape='ovr').fit(train, GT_train)
     pred = clf.predict(test)
     cm = confusion_matrix(GT_test, pred)
     sc = clf.score(stdSlr.transform(test), GT_test)
     accuracy = 100*sc
     end=time.time()
-    fpr, tpr, thresholds = roc_curve(np.asarray(GT_test).ravel(), pred.ravel(), pos_label=2)
-    print 'Done in '+str(end-init)+' secs.'
-    return accuracy,cm,fpr,tpr
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    y_score = clf.decision_function(stdSlr.transform(test))
+
+    for i in range(8):
+        fpr[i], tpr[i], _ = roc_curve(np.asarray(GT_test), y_score[:,i],pos_label = i)
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(8)]))
+
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(8):
+        mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+
+    # Finally average it and compute AUC
+    mean_tpr /= 8
+
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+
+    return accuracy,cm,fpr,tpr,roc_auc
 
 def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,numparams):
     print 'Training and Testing a Linear SVM'
@@ -245,7 +283,7 @@ def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,
     train = stdSlr.transform(train)
     kernelMatrix = histogramIntersection(train, train)
     tuned_parameters = [{'kernel': ['linear'], 'C':np.linspace(start,end,num=numparams)}]
-    clf = GridSearchCV(svm.SVC(), tuned_parameters, cv=folds,scoring='accuracy')
+    clf = GridSearchCV(svm.SVC(kernel='linear',decision_function_shape='ovr'), tuned_parameters, cv=folds,scoring='accuracy',n_jobs = 8)
     clf.fit(kernelMatrix, GT_train)
     print(clf.best_params_)
     predictMatrix = histogramIntersection(stdSlr.transform(test), train)
@@ -254,9 +292,32 @@ def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,
     accuracy = correct / len(GT_test)
     cm = confusion_matrix(GT_test, SVMpredictions)
     end=time.time()
-    fpr, tpr, thresholds = roc_curve(np.asarray(GT_test).ravel(), SVMpredictions.ravel(), pos_label=2)
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    y_score = clf.decision_function(predictMatrix)
+
+    for i in range(8):
+        fpr[i], tpr[i], _ = roc_curve(np.asarray(GT_test), y_score[:,i],pos_label = i)
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+        # First aggregate all false positive rates
+    all_fpr = np.unique(np.concatenate([fpr[i] for i in range(8)]))
+
+    # Then interpolate all ROC curves at this points
+    mean_tpr = np.zeros_like(all_fpr)
+    for i in range(8):
+        mean_tpr += interp(all_fpr, fpr[i], tpr[i])
+
+    # Finally average it and compute AUC
+    mean_tpr /= 8
+
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+
     print 'Done in '+str(end-init)+' secs.'
-    return accuracy,cm,fpr,tpr
+    return accuracy,cm,fpr,tpr,roc_auc
 
 def histogramIntersection(M, N):
     m = M.shape[0]
