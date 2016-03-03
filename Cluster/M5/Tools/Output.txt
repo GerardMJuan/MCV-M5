@@ -1,0 +1,6 @@
+For lbp_lin The accuracy is [ 0.86245353  0.91945477  0.96282528  0.93556382  0.94671623  0.91078067 0.91078067  0.92069393]
+For lbp_lin The accuracy is 0.581164807931
+For lbp_lin The accuracy is 0.442379182156
+For lbp_lin The accuracy is 0.566294919455
+For lbp_lin The accuracy is 0.582403965304
+For lbp_lin The accuracy is 0.7385377943
