@@ -415,7 +415,7 @@ def plot_confusion_matrix(cm, names, savename, title='Confusion matrix', cmap=pl
     tick_marks = np.arange(len(names))
     plt.xticks(tick_marks, names, rotation=45)
     plt.yticks(tick_marks, names)
-    plt.tight_layout()
+#    plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.savefig(savename)
