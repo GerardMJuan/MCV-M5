@@ -1,0 +1,10 @@
+# SGE submission options
+#$ -q fast.master.q #Queue selection
+#$ -o output #Output directory
+#$ -e error #Error directory output
+#$ -cwd #Change to current working directory
+#$ -N basic #Name of the job
+#$ -l mem_token=6G,mem_free=6G #Relevant information for process queuin
+
+/usr/bin/python M5/Tools/Main_script.py
+
