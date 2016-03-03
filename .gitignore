@@ -66,3 +66,5 @@ target/
 MIT_split/
 *.xml
 MCV-M5-Team1.zip
+*.dat
+*.xml

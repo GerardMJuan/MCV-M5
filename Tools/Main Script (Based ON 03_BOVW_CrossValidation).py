@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from BOVW_functions import *
 from sklearn.metrics import roc_curve, auc
 
@@ -11,12 +12,12 @@ if __name__ == '__main__':
 
     k_knn = 32
     lookfor_k = 0
-    num_iterations_lookfor_k = 5
+    num_iterations_lookfor_k = 1
     x_total_k = []
     y_total_acc = []
 
     folds = 5
-    start=0.01
+    start=0.001
     end=10
     numparams=30
 
@@ -58,13 +59,13 @@ if __name__ == '__main__':
 
         names = unique_elements(GT_labels_test)
         # Name of the confusion matrix file
-        savename = str(folds) + '_lin.png'
+        savename = str(folds) + 'sift_CN.png'
+        #Name of the ROC Curve file
+        save = str(folds) +'sift_ROC.png'
         plot_confusion_matrix(cm,names,savename)
         s = 'For lbp_lin The accuracy is ' + str(ac_BOVW_L) + '\n'
         text_file.write(s)
 
-        #Name of the ROC Curve file
-        save = str(folds) +'lbp_lin.png'
 
         plt.figure()
         plt.plot(fpr["macro"], tpr["macro"],
