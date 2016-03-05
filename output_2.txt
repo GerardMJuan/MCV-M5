@@ -1,0 +1,68 @@
+Results for ORB - ORB
+Extracting Local Descriptors
+Done in 10.3239998817 secs.
+The number of keypoints is 382
+Extracting Local Color Descriptors
+Done in 413.631000042 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 25.1300001144 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 22.1019999981 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 25.3169999123 secs.
+Extracting visual word representations
+Done in 36.1340000629 secs.
+Extracting visual word representations
+Done in 23.0710000992 secs.
+Extracting visual word representations
+Done in 29.1270000935 secs.
+Extracting Local Descriptors
+Done in 4.61600017548 secs.
+Extracting Local Color Descriptors
+Done in 173.29399991 secs.
+Extracting visual word representations
+Done in 15.4500000477 secs.
+Extracting visual word representations
+Done in 9.43099999428 secs.
+Extracting visual word representations
+Done in 12.6700000763 secs.
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Accuracy BOVW with LinearSVM SIFT: 26.8897149938
+Accuracy BOVW with LinearSVM Color: 32.9615861214
+Accuracy BOVW with LinearSVM Early Fusion: 34.6964064436
+Results for FAST - SIFT
+Extracting Local Descriptors
+Done in 371.575999975 secs.
+The number of keypoints is 1105
+Extracting Local Color Descriptors
+Done in 334.781000137 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 101.260999918 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 22.8250000477 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 32.8970000744 secs.
+Extracting visual word representations
+Done in 157.774999857 secs.
+Extracting visual word representations
+Done in 122.773000002 secs.
+Extracting visual word representations
+Done in 159.981999874 secs.
+Extracting Local Descriptors
+Done in 197.101000071 secs.
+Extracting Local Color Descriptors
+Done in 152.924999952 secs.
+Extracting visual word representations
+Done in 85.1029999256 secs.
+Extracting visual word representations
+Done in 52.256000042 secs.
+Extracting visual word representations
+Done in 67.0680000782 secs.
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Accuracy BOVW with LinearSVM SIFT: 85.0061957869
+Accuracy BOVW with LinearSVM Color: 41.6356877323
+Accuracy BOVW with LinearSVM Early Fusion: 63.1970260223

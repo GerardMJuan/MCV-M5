@@ -1,0 +1,13 @@
+Extracting Local Descriptors
+Done in 223.208999872 secs.
+Computing kmeans on 50000 samples with 100 centroids
+Done in 1.6859998703 secs.
+Extracting visual word representations
+Done in 1535.23900008 secs.
+Extracting Local Descriptors
+Done in 102.601999998 secs.
+Extracting visual word representations
+Done in 584.42599988 secs.
+Training and Testing a Linear SVM
+{'kernel': 'linear', 'C': 0.34579310344827591}
+Done in 1096.54700017 secs.

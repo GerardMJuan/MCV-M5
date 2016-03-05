@@ -1,0 +1,95 @@
+Results for SIFT
+Extracting Local Descriptors
+Done in 116.254999876 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 32.8510000706 secs.
+Extracting visual word representations
+Done in 36.2000000477 secs.
+Extracting Local Descriptors
+Done in 50.7430000305 secs.
+Extracting visual word representations
+Done in 16.3680000305 secs.
+The number of keypoints is 506
+Training and Testing a Linear SVM
+{'kernel': 'linear', 'C': 0.001}
+Done in 329.313999891 secs.
+Results for Dense
+Extracting Local Descriptors
+Done in 17.0809998512 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 29.9359998703 secs.
+Extracting visual word representations
+Done in 120.936000109 secs.
+Extracting Local Descriptors
+Done in 7.37300014496 secs.
+Extracting visual word representations
+Done in 52.007999897 secs.
+The number of keypoints is 1849
+Training and Testing a Linear SVM
+{'kernel': 'linear', 'C': 0.001}
+Done in 324.17599988 secs.
+Results for SURF
+Extracting Local Descriptors
+Done in 707.251000166 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 29.9800000191 secs.
+Extracting visual word representations
+Done in 39.6909999847 secs.
+Extracting Local Descriptors
+Done in 302.052999973 secs.
+Extracting visual word representations
+Done in 16.871999979 secs.
+The number of keypoints is 551
+Training and Testing a Linear SVM
+{'kernel': 'linear', 'C': 0.001}
+Done in 282.015999794 secs.
+Results for ORB
+Extracting Local Descriptors
+Done in 443.980000019 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 26.5559999943 secs.
+Extracting visual word representations
+Done in 33.3759999275 secs.
+Extracting Local Descriptors
+Done in 188.59100008 secs.
+Extracting visual word representations
+Done in 14.1010000706 secs.
+The number of keypoints is 400
+Training and Testing a Linear SVM
+{'kernel': 'linear', 'C': 0.001}
+Done in 342.848999977 secs.
+Results for FAST
+Extracting Local Descriptors
+Done in 368.701000214 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 28.760999918 secs.
+Extracting visual word representations
+Done in 154.119999886 secs.
+Extracting Local Descriptors
+Done in 156.996000051 secs.
+Extracting visual word representations
+Done in 60.8010001183 secs.
+The number of keypoints is 2157
+Training and Testing a Linear SVM
+{'kernel': 'linear', 'C': 0.001}
+Done in 225.645999908 secs.
+Results for MSER
+Extracting Local Descriptors
+Done in 218.486999989 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 33.3109998703 secs.
+Extracting visual word representations
+Done in 11.1160001755 secs.
+Extracting Local Descriptors
+Done in 94.4689998627 secs.
+Extracting visual word representations
+Traceback (most recent call last):
+  File "D:/Dropbox/Universitat/Master/M5/MCV-M5/Tools/Script_Descriptors.py", line 53, in <module>
+    VW_test=getAndSaveBoVWRepresentation(DSC_test,k,CB,visual_words_filename_test)
+  File "D:\Dropbox\Universitat\Master\M5\MCV-M5\Tools\BOVW_functions.py", line 156, in getAndSaveBoVWRepresentation
+    words,distance=vq.vq(descriptors[i],codebook)
+  File "C:\Users\Gerard\Anaconda2\lib\site-packages\scipy\cluster\vq.py", line 210, in vq
+    obs = _asarray_validated(obs, check_finite=check_finite)
+  File "C:\Users\Gerard\Anaconda2\lib\site-packages\scipy\_lib\_util.py", line 140, in _asarray_validated
+    raise ValueError('object arrays are not supported')
+ValueError: object arrays are not supported

@@ -2,11 +2,13 @@ from BOVW_functions import *
 from sklearn.metrics import roc_curve, auc
 
 detector='SIFT'
-descriptor='SIFT'
+descriptor='HOG'
 num_samples=50000
 
 k=5000 # KNN parameter
 C=1 # LinearSVM parameter
+
+doPCA = True # Do PCA before K Means
 
 classifier='LinearSVM' # Choose between KNN and LinearSVM
 
@@ -16,7 +18,7 @@ visual_words_filename_test='VW_test_'+detector+'_'+descriptor+'_'+str(num_sample
 
 filenames_train,GT_ids_train,GT_labels_train = prepareFiles('../MIT_split/train/')
 KPTS_train,DSC_train = getKeypointsDescriptors(filenames_train,detector,descriptor)
-CB=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename)
+CB=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename, doPCA)
 #CB=cPickle.load(open(codebook_filename,'r'))
 
 VW_train=getAndSaveBoVWRepresentation(DSC_train,k,CB,visual_words_filename_train)

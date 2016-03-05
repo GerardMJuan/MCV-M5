@@ -1,11 +1,9 @@
-import sys
 import cv2
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import cPickle
 import time
-import Config as cfg
 import random
 from PIL import Image
 import scipy.cluster.vq as vq
@@ -43,7 +41,7 @@ def prepareFiles(rootpath):
 
 def getKeypointsDescriptors(filenames,detector_type,descriptor_type):
     detector=cv2.FeatureDetector_create(detector_type)
-    if descriptor_type == 'SIFT':
+    if not (descriptor_type == 'HOG' or descriptor_type == 'LBP'):
         descriptor = cv2.DescriptorExtractor_create(descriptor_type)
     K = []
     D = []
@@ -52,17 +50,18 @@ def getKeypointsDescriptors(filenames,detector_type,descriptor_type):
     for filename in filenames:
         ima=cv2.imread(filename)
         gray=cv2.cvtColor(ima,cv2.COLOR_BGR2GRAY)
-        if descriptor_type == 'SIFT':
-            kpts=detector.detect(gray)
-            kpts,des=descriptor.compute(gray,kpts)
-            K.append(kpts)
-            D.append(des)
-        elif descriptor_type == 'HOG':
+        if descriptor_type == 'HOG':
             des = extractHOGfeatures(gray, detector)
             D.append(des)
         elif descriptor_type == 'LBP':
             des = extractLBPfeatures(gray, detector)
             D.append(des)
+        else:
+            kpts=detector.detect(gray)
+            kpts,des=descriptor.compute(gray,kpts)
+            K.append(kpts)
+            D.append(des)
+
     end=time.time()
 
     print 'Done in '+str(end-init)+' secs.'
@@ -92,12 +91,12 @@ def extractLBPfeatures(img, detector):
     return features
 
 def extractHOGfeatures(img, detector):
-    winSize = (64,64)
-    blockSize = (16,16)
-    blockStride = (8,8)
-    cellSize = (8,8)
-    nbins = 9
-    hog = cv2.HOGDescriptor(winSize,blockSize,blockStride,cellSize,nbins)
+    #winSize = (64,64)
+    #blockSize = (16,16)
+    #blockStride = (8,8)
+    #cellSize = (8,8)
+    #nbins = 9
+    hog = cv2.HOGDescriptor()#winSize,blockSize,blockStride,cellSize,nbins)
     kpts = detector.detect(img)
     loc = [(int(x.pt[0]),int(x.pt[1])) for x in kpts]
     loc = tuple(loc)
@@ -135,11 +134,43 @@ def getLocalColorDescriptors(filenames, keypoints):
     print 'Done in '+str(end-init)+' secs.'
     return(CD)
 
-def getAndSaveCodebook(descriptors,num_samples,k,filename):
+def computePCA(data,experimentType):
+    #data is the input data to be reduced
+	#experimentType is the type of experiment: 	1 = plots the PCA variance depending on the number of components.
+	# 											0 = performs a PCA with n_components
+
+    init=time.time()
+    if experimentType == 1:
+        print 'Looking for the PCA variance depending on the number of items'
+        my_model = PCA()
+        my_model.fit_transform(data)
+        end=time.time()
+        plt.figure()
+        components = [index for index in range(0, len(my_model.explained_variance_ratio_.cumsum()))]
+        plt.plot(components,my_model.explained_variance_ratio_.cumsum())
+        plt.xlabel('Components')
+        plt.ylabel('Acc. Variance')
+        plt.title('PCA variance depending on the number of components')
+        plt.show()
+    else:
+        print 'Computing PCA using'+str(cfg.pca_ncomponents)+' components.'
+        my_model = PCA(cfg.pca_ncomponents)
+        my_model.fit_transform(data)
+        end=time.time()
+	print 'END PCA: Done in '+str(end-init)+' secs.'
+
+	return my_model.components_ # Return the eigenvalues
+
+def getAndSaveCodebook(descriptors,num_samples,k,filename,doPCA):
     size_descriptors=descriptors[0].shape[1]
     A=np.zeros((num_samples,size_descriptors),dtype=np.float32)
     for i in range(num_samples):
         A[i,:]=random.choice(random.choice(descriptors))
+
+	#Perform a dimensionality reduction before K Means
+    if doPCA == True:
+        A = computePCA(A,1)
+
     print 'Computing kmeans on '+str(num_samples)+' samples with '+str(k)+' centroids'
     init=time.time()
     A = vq.whiten(A)
@@ -283,7 +314,7 @@ def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,
     train = stdSlr.transform(train)
     kernelMatrix = histogramIntersection(train, train)
     tuned_parameters = [{'kernel': ['linear'], 'C':np.linspace(start,end,num=numparams)}]
-    clf = GridSearchCV(svm.SVC(kernel='linear',decision_function_shape='ovr'), tuned_parameters, cv=folds,scoring='accuracy',n_jobs = 8)
+    clf = GridSearchCV(svm.SVC(kernel='linear',decision_function_shape='ovr'), tuned_parameters, cv=folds,scoring='accuracy',n_jobs = 6)
     clf.fit(kernelMatrix, GT_train)
     print(clf.best_params_)
     predictMatrix = histogramIntersection(stdSlr.transform(test), train)

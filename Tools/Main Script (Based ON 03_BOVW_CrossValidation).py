@@ -1,14 +1,13 @@
-#!/usr/bin/python
 from BOVW_functions import *
 from sklearn.metrics import roc_curve, auc
 
 if __name__ == '__main__':
 
     detector='SIFT'
-    descriptor='SIFT'
+    descriptor='HOG'
     num_samples=50000
 
-    k=5000
+    k= 100
 
     k_knn = 32
     lookfor_k = 0
@@ -20,6 +19,9 @@ if __name__ == '__main__':
     start=0.001
     end=10
     numparams=30
+
+    doPCA = True # Do PCA before K Means
+
 
     classifier='LinearSVM' # Choose between KNN and linearSVM
     # Name of the accuracy file
@@ -40,7 +42,7 @@ if __name__ == '__main__':
 
         filenames_train,GT_ids_train,GT_labels_train = prepareFiles('../MIT_split/train/')
         KPTS_train,DSC_train = getKeypointsDescriptors(filenames_train,detector,descriptor)
-        CB=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename)
+        CB=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename, doPCA)
         #CB=cPickle.load(open(codebook_filename,'r'))
 
         VW_train=getAndSaveBoVWRepresentation(DSC_train,k,CB,visual_words_filename_train)
@@ -59,9 +61,9 @@ if __name__ == '__main__':
 
         names = unique_elements(GT_labels_test)
         # Name of the confusion matrix file
-        savename = str(folds) + 'sift_CN.png'
+        savename = str(folds) + 'hog_CN.png'
         #Name of the ROC Curve file
-        save = str(folds) +'sift_ROC.png'
+        save = str(folds) +'hog_ROC.png'
         plot_confusion_matrix(cm,names,savename)
         s = 'For lbp_lin The accuracy is ' + str(ac_BOVW_L) + '\n'
         text_file.write(s)

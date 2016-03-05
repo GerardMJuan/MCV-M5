@@ -1,30 +1,34 @@
 from BOVW_functions import *
 
 ##########################
-#PARÁMETROS DE EJECUCION
+#PARAMETROS DE EJECUCION
 ##########################
 
-# Método usado para detectar los puntos de interés
-detector='Dense'
-# Método usado para obtener la descripción de los puntos de interés
+# MEtodo usado para detectar los puntos de interEs
+detector='SIFT'#'Dense'
+# MEtodo usado para obtener la descripciOn de los puntos de interEs
 descriptor='SIFT'
-# Número de puntos de interés que se utilizan para obtener el vocabulario visual
+# NUmero de puntos de interEs que se utilizan para obtener el vocabulario visual
 num_samples=50000
-# Número de palabras en el vocabulario visual
-k=32
-# Factor de regularización C para entrenar el clasificador SVM
-C=1
-# Directorio raiz donde se encuentran todas las imágenes de aprendizaje
-dataset_folder_train='../../Databases/MIT_split/train/'
-# Directorio raiz donde se encuentran todas las imágenes de test
-dataset_folder_test='../../Databases/MIT_split/test/'
+# Numero de palabras en el vocabulario visual
+k=5000
+# Factor de regularizacien C para entrenar el clasificador SVM
+C=0.1
+# Directorio raiz donde se encuentran todas las imagenes de aprendizaje
+dataset_folder_train='../MIT_split/train/'
+# Directorio raiz donde se encuentran todas las imagenes de test
+dataset_folder_test='../MIT_split/test/'
 
-##############################################
+doPCA = True # Do PCA before K Means
+
+#Modo de experimentacion. 0 = rehacer experimentos, 1 = cargar datos ya guardados.
+use_precalc_voc = 0
 
 
-# Preparación de los nombres de los ficheros necesarios para guardar el vocabulario y las palabras visuales de las imágenes de aprendizaje y test
+
+# PreparaciOn de los nombres de los ficheros necesarios para guardar el vocabulario y las palabras visuales de las imAgenes de aprendizaje y test
 # Se generan tres vocabularios y, por lo tanto tres conjuntos de palabras visuales utilizando tres configuraciones diferentes de descriptor:
-# 1. Sólo SIFT, 2. Color, 3. Concatenación de SIFT + color
+# 1. SOlo SIFT, 2. Color, 3. ConcatenaciOn de SIFT + color
 
 codebook_filename_SIFT='CB_S_'+detector+'_'+descriptor+'_'+str(num_samples)+'samples_'+str(k)+'centroids.dat'
 codebook_filename_COLOR='CB_C_'+detector+'_'+descriptor+'_'+str(num_samples)+'samples_'+str(k)+'centroids.dat'
@@ -38,41 +42,45 @@ visual_words_filename_test_SIFT='VW_test_SIFT_'+detector+'_'+descriptor+'_'+str(
 visual_words_filename_test_COLOR='VW_test_COLOR_'+detector+'_'+descriptor+'_'+str(num_samples)+'samples_'+str(k)+'centroids.dat'
 visual_words_filename_test_EARLY='VW_test_EARLY_'+detector+'_'+descriptor+'_'+str(num_samples)+'samples_'+str(k)+'centroids.dat'
 
-# Cálculo de puntos de interés para todas las imágenes del conjunto de aprendizaje. La descripción se obtiene tanto con SIFT como con el descriptor de color
+# CAlculo de puntos de interEs para todas las imAgenes del conjunto de aprendizaje. La descripciOn se obtiene tanto con SIFT como con el descriptor de color
 filenames_train,GT_ids_train,GT_labels_train = prepareFiles(dataset_folder_train)
 KPTS_train,DSC_train = getKeypointsDescriptors(filenames_train,detector,descriptor)
 CDSC_train = getLocalColorDescriptors(filenames_train,KPTS_train)
 
-# Early fusion de las dos descripciones para cada punto de interés: SIFT + color. Simplemente se concatenan los dos descriptores
+# Early fusion de las dos descripciones para cada punto de interEs: SIFT + color. Simplemente se concatenan los dos descriptores
 FDSC_train=[]
 for i in range(len(DSC_train)):
 	FDSC_train.append(np.hstack((DSC_train[i],CDSC_train[i])))
 
-# Construcción de los 3 vocabularios visuales: SIFT, Color y Early fusion. Los vocabularios quedan guardados en disco.
-# Comentar estas líneas si los vocabularios ya están creados y guardados en disco de una ejecución anterior
-CB_SIFT=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename_SIFT)
-CB_COLOR=getAndSaveCodebook(CDSC_train, num_samples, k, codebook_filename_COLOR)
-CB_EARLY=getAndSaveCodebook(FDSC_train, num_samples, k, codebook_filename_EARLY)
+# ConstrucciOn de los 3 vocabularios visuales: SIFT, Color y Early fusion. Los vocabularios quedan guardados en disco.
+# Comentar estas lIneas si los vocabularios ya estAn creados y guardados en disco de una ejecuciOn anterior
+if use_precalc_voc == 0:
+	CB_SIFT=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename_SIFT, doPCA)
+	CB_COLOR=getAndSaveCodebook(CDSC_train, num_samples, k, codebook_filename_COLOR, doPCA)
+	CB_EARLY=getAndSaveCodebook(FDSC_train, num_samples, k, codebook_filename_EARLY, doPCA)
 
-# Carga de los vocabularios visuales previamente creados y guardados en disco en una ejecución anterior.
-# Comentar estas líneas si se quiere re-calcular los vocabularios o si los vocabularios todavía no se han creado
-#CB_SIFT=cPickle.load(open(codebook_filename_SIFT,'r'))
-#CB_COLOR=cPickle.load(open(codebook_filename_COLOR,'r'))
-#CB_EARLY=cPickle.load(open(codebook_filename_EARLY,'r'))
+# Carga de los vocabularios visuales previamente creados y guardados en disco en una ejecuciOn anterior.
+# Comentar estas lIneas si se quiere re-calcular los vocabularios o si los vocabularios todavIa no se han creado
+if use_precalc_voc == 1:
+	CB_SIFT=cPickle.load(open(codebook_filename_SIFT,'r'))
+	CB_COLOR=cPickle.load(open(codebook_filename_COLOR,'r'))
+	CB_EARLY=cPickle.load(open(codebook_filename_EARLY,'r'))
 
-# Obtiene la descripción BoW de las imágenes del conjunto de aprendizaje para las tres descripciones: SIFT, Color y Early fusion
-VW_SIFT_train=getAndSaveBoVWRepresentation(DSC_train,k,CB_SIFT,visual_words_filename_train_SIFT)
-VW_COLOR_train=getAndSaveBoVWRepresentation(CDSC_train,k,CB_COLOR,visual_words_filename_train_COLOR)
-VW_FUSION_train=getAndSaveBoVWRepresentation(FDSC_train,k,CB_EARLY,visual_words_filename_train_EARLY)
+# Obtiene la descripciOn BoW de las imAgenes del conjunto de aprendizaje para las tres descripciones: SIFT, Color y Early fusion
+if use_precalc_voc == 0:
+	VW_SIFT_train=getAndSaveBoVWRepresentation(DSC_train,k,CB_SIFT,visual_words_filename_train_SIFT)
+	VW_COLOR_train=getAndSaveBoVWRepresentation(CDSC_train,k,CB_COLOR,visual_words_filename_train_COLOR)
+	VW_FUSION_train=getAndSaveBoVWRepresentation(FDSC_train,k,CB_EARLY,visual_words_filename_train_EARLY)
 
-# Carga de las 3 descripciones BoW del conjunto de aprendizaje previamente creadas y guardadas en disco en una ejecución anterior.
-# Comentar estas líneas si se quiere re-calcular la representación o si la representación todavía no se ha creado
-#VW_SIFT_train=cPickle.load(open(visual_words_filename_train_SIFT,'r'))
-#VW_COLOR_train=cPickle.load(open(visual_words_filename_train_COLOR,'r'))
-#VW_FUSION_train=cPickle.load(open(visual_words_filename_train_EARLY,'r'))
+# Carga de las 3 descripciones BoW del conjunto de aprendizaje previamente creadas y guardadas en disco en una ejecuciOn anterior.
+# Comentar estas lIneas si se quiere re-calcular la representaciOn o si la representaciOn todavIa no se ha creado
+if use_precalc_voc == 1:
+	VW_SIFT_train=cPickle.load(open(visual_words_filename_train_SIFT,'r'))
+	VW_COLOR_train=cPickle.load(open(visual_words_filename_train_COLOR,'r'))
+	VW_FUSION_train=cPickle.load(open(visual_words_filename_train_EARLY,'r'))
 
-# Cálculo de puntos de interés para todas las imágenes del conjunto de test. Obtiene las dos descripciones (SIFT y color) y también las concatena
-# para obtener la descripción Early Fusion
+# CAlculo de puntos de interEs para todas las imAgenes del conjunto de test. Obtiene las dos descripciones (SIFT y color) y tambiEn las concatena
+# para obtener la descripciOn Early Fusion
 filenames_test,GT_ids_test,GT_labels_test = prepareFiles(dataset_folder_test)
 KPTS_test,DSC_test = getKeypointsDescriptors(filenames_test,detector,descriptor)
 CDSC_test = getLocalColorDescriptors(filenames_test,KPTS_test)
@@ -80,12 +88,12 @@ FDSC_test=[]
 for i in range(len(DSC_test)):
 	FDSC_test.append(np.hstack((DSC_test[i],CDSC_test[i])))
 
-# Obtiene las 3 descripciones BoW (SIFT, color y early fusion) de las imágenes del conjunto de test
+# Obtiene las 3 descripciones BoW (SIFT, color y early fusion) de las imAgenes del conjunto de test
 VW_SIFT_test=getAndSaveBoVWRepresentation(DSC_test,k,CB_SIFT,visual_words_filename_test_SIFT)
 VW_COLOR_test=getAndSaveBoVWRepresentation(CDSC_test,k,CB_COLOR,visual_words_filename_test_COLOR)
 VW_FUSION_test=getAndSaveBoVWRepresentation(FDSC_test,k,CB_EARLY,visual_words_filename_test_EARLY)
 
-# Entrena un clasificador SVM con las imágenes del conjunto de aprendizaje y lo evalúa utilizando las imágenes del conjunto de test
+# Entrena un clasificador SVM con las imAgenes del conjunto de aprendizaje y lo evalUa utilizando las imAgenes del conjunto de test
 # para las 3 descripciones (SIFT, color y early fusion)
 # Devuelve la accuracy como medida del rendimiento del clasificador
 ac_BOVW_SIFT = trainAndTestLinearSVM(VW_SIFT_train,VW_SIFT_test,GT_ids_train,GT_ids_test,C)

@@ -1,0 +1,65 @@
+DENSE SIFT
+Extracting Local Descriptors
+Done in 70.6400001049 secs.
+Extracting Local Color Descriptors
+Done in 187.674999952 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 43.5930001736 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 10.8759999275 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 38.1970000267 secs.
+Extracting visual word representations
+Done in 132.486999989 secs.
+Extracting visual word representations
+Done in 56.4400000572 secs.
+Extracting visual word representations
+Done in 147.35800004 secs.
+Extracting Local Descriptors
+Done in 54.1720001698 secs.
+Extracting Local Color Descriptors
+Done in 79.6970000267 secs.
+Extracting visual word representations
+Done in 55.5839998722 secs.
+Extracting visual word representations
+Done in 24.5460000038 secs.
+Extracting visual word representations
+Done in 59.0910000801 secs.
+Accuracy BOVW with LinearSVM SIFT: 80.4213135068
+Accuracy BOVW with LinearSVM Color: 30.8550185874
+Accuracy BOVW with LinearSVM Early Fusion: 82.5278810409
+
+
+SURF SURF
+Extracting Local Descriptors
+Done in 47.3379998207 secs.
+Extracting Local Color Descriptors
+Done in 310.1650002 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 28.6849999428 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 24.5069999695 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 36.1410000324 secs.
+Extracting visual word representations
+Done in 38.6570000648 secs.
+Extracting visual word representations
+Done in 34.2810001373 secs.
+Extracting visual word representations
+Done in 40.0640001297 secs.
+Extracting Local Descriptors
+Done in 23.1909999847 secs.
+Extracting Local Color Descriptors
+Done in 132.84800005 secs.
+Extracting visual word representations
+Done in 16.2739999294 secs.
+Extracting visual word representations
+Done in 14.859000206 secs.
+Extracting visual word representations
+Done in 17.0810000896 secs.
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Accuracy BOVW with LinearSVM SIFT: 31.970260223
+Accuracy BOVW with LinearSVM Color: 41.1400247831
+Accuracy BOVW with LinearSVM Early Fusion: 37.5464684015

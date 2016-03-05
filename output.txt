@@ -1,0 +1,114 @@
+Results for SIFT - SIFT
+Extracting Local Descriptors
+Done in 116.212999821 secs.
+The number of keypoints is 172
+Extracting Local Color Descriptors
+Done in 62.1260001659 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 32.7069997787 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 32.9759998322 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 31.4139997959 secs.
+Extracting visual word representations
+Done in 38.6579999924 secs.
+Extracting visual word representations
+Done in 26.2349998951 secs.
+Extracting visual word representations
+Done in 40.257999897 secs.
+Extracting Local Descriptors
+Done in 50.8570001125 secs.
+Extracting Local Color Descriptors
+Done in 27.0959999561 secs.
+Extracting visual word representations
+Done in 16.8100001812 secs.
+Extracting visual word representations
+Done in 11.3920001984 secs.
+Extracting visual word representations
+Done in 17.3710000515 secs.
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Accuracy BOVW with LinearSVM SIFT: 67.7819083024
+Accuracy BOVW with LinearSVM Color: 44.4857496902
+Accuracy BOVW with LinearSVM Early Fusion: 39.7769516729
+Results for Dense - SIFT
+Extracting Local Descriptors
+Done in 17.375 secs.
+The number of keypoints is 1849
+Extracting Local Color Descriptors
+Done in 172.962000132 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 35.2839999199 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 11.9879999161 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 32.9639999866 secs.
+Extracting visual word representations
+Done in 130.190999985 secs.
+Extracting visual word representations
+Done in 53.2590000629 secs.
+Extracting visual word representations
+Done in 131.580999851 secs.
+Extracting Local Descriptors
+Done in 17.5160000324 secs.
+Extracting Local Color Descriptors
+Done in 74.5290000439 secs.
+Extracting visual word representations
+Done in 54.7939999104 secs.
+Extracting visual word representations
+Done in 22.5390000343 secs.
+Extracting visual word representations
+Done in 56.7720000744 secs.
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Accuracy BOVW with LinearSVM SIFT: 80.0495662949
+Accuracy BOVW with LinearSVM Color: 30.7311028501
+Accuracy BOVW with LinearSVM Early Fusion: 81.7843866171
+Results for SURF - SURF
+Extracting Local Descriptors
+Done in 96.1879999638 secs.
+The number of keypoints is 250
+Extracting Local Color Descriptors
+Done in 368.426999807 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 29.7880001068 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 26.5180001259 secs.
+Computing kmeans on 50000 samples with 5000 centroids
+Done in 25.8819999695 secs.
+Extracting visual word representations
+Done in 36.3339998722 secs.
+Extracting visual word representations
+Done in 31.8989999294 secs.
+Extracting visual word representations
+Done in 37.9989998341 secs.
+Extracting Local Descriptors
+Done in 24.2850000858 secs.
+Extracting Local Color Descriptors
+Done in 127.667999983 secs.
+Extracting visual word representations
+Done in 15.3159999847 secs.
+Extracting visual word representations
+Done in 13.5320000648 secs.
+Extracting visual word representations
+Done in 16.1089999676 secs.
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Training and Testing a linear SVM
+Accuracy BOVW with LinearSVM SIFT: 37.0508054523
+Accuracy BOVW with LinearSVM Color: 44.1140024783
+Accuracy BOVW with LinearSVM Early Fusion: 44.4857496902
+Results for BRISK - BRISK
+Extracting Local Descriptors
+Done in 9.69500017166 secs.
+The number of keypoints is 43
+Extracting Local Color Descriptors
+Done in 57.9340000153 secs.
+Traceback (most recent call last):
+  File "D:/Dropbox/Universitat/Master/M5/MCV-M5/Tools/04_Early_Fusion.py", line 50, in <module>
+    FDSC_train.append(np.hstack((DSC_train[j],CDSC_train[j])))
+  File "C:\Users\Gerard\Anaconda2\lib\site-packages\numpy\core\shape_base.py", line 278, in hstack
+    return _nx.concatenate(arrs, 0)
+ValueError: all the input arrays must have same number of dimensions
