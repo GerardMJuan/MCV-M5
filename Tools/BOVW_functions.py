@@ -1,6 +1,7 @@
 import cv2
 import glob
 import numpy as np
+import Config as cfg
 import matplotlib.pyplot as plt
 import cPickle
 import time
@@ -22,6 +23,7 @@ from sklearn.multiclass import OneVsRestClassifier
 from joblib import Parallel, delayed
 from joblib import load, dump
 from scipy import interp
+import ColorNaming as cnam
 
 
 def prepareFiles(rootpath):
@@ -108,7 +110,7 @@ def extractHOGfeatures(img, detector):
     #         visualise=False,
     return fd
 
-def getLocalColorDescriptors(filenames, keypoints):
+def getLocalColorDescriptors(filenames, keypoints, colormode):
     CD=[]
     area=4
     n_bins=16
@@ -116,28 +118,34 @@ def getLocalColorDescriptors(filenames, keypoints):
     init=time.time()
     cont=0
     for filename in filenames:
-        kpts=keypoints[cont]
-        cdesc=np.zeros((len(kpts),n_bins),dtype=np.float32)
-        ima=cv2.imread(filename)
-        hls=cv2.cvtColor(ima,cv2.COLOR_BGR2HLS)
-        hue=hls[:,:,0]
-        w,h=hue.shape
-        cont2=0
-        for k in kpts:
-            patch=hue[max(0,k.pt[0] - area*k.size):min(w,k.pt[0] + area*k.size),max(0,k.pt[1] - area*k.size):min(h,k.pt[1] + area*k.size)]
-            hist,bin_edges=np.histogram(patch,bins=n_bins,range=(0,180))
-            cdesc[cont2,:]=hist
-            cont2+=1
-        cont+=1
+        if colormode == 0:
+            ima=cv2.imread(filename)
+            hls=cv2.cvtColor(ima,cv2.COLOR_BGR2HLS)
+            cdesc = cnam.getColorNamingDescriptor(hls)
+        else:
+            kpts=keypoints[cont]
+            cdesc=np.zeros((len(kpts),n_bins),dtype=np.float32)
+            ima=cv2.imread(filename)
+            hls=cv2.cvtColor(ima,cv2.COLOR_BGR2HLS)
+            cnam.getColorNamingDescriptor(hls)
+            hue=hls[:,:,0]
+            w,h=hue.shape
+            cont2=0
+            for k in kpts:
+                patch=hue[max(0,k.pt[0] - area*k.size):min(w,k.pt[0] + area*k.size),max(0,k.pt[1] - area*k.size):min(h,k.pt[1] + area*k.size)]
+                hist,bin_edges=np.histogram(patch,bins=n_bins,range=(0,180))
+                cdesc[cont2,:]=hist
+                cont2+=1
+            cont+=1
         CD.append(cdesc)
     end=time.time()
     print 'Done in '+str(end-init)+' secs.'
     return(CD)
 
-def computePCA(data,experimentType):
+def computePCA(data,experimentType, pca_ncomponents):
     #data is the input data to be reduced
-	#experimentType is the type of experiment: 	1 = plots the PCA variance depending on the number of components.
-	# 											0 = performs a PCA with n_components
+    #experimentType is the type of experiment: 	1 = plots the PCA variance depending on the number of components.
+    # 											0 = performs a PCA with n_components
 
     init=time.time()
     if experimentType == 1:
@@ -153,23 +161,23 @@ def computePCA(data,experimentType):
         plt.title('PCA variance depending on the number of components')
         plt.show()
     else:
-        print 'Computing PCA using'+str(cfg.pca_ncomponents)+' components.'
-        my_model = PCA(cfg.pca_ncomponents)
+        print 'Computing PCA using '+str(pca_ncomponents)+' components.'
+        my_model = PCA(pca_ncomponents)
         my_model.fit_transform(data)
         end=time.time()
-	print 'END PCA: Done in '+str(end-init)+' secs.'
+    print 'END PCA: Done in '+str(end-init)+' secs.'
 
-	return my_model.components_ # Return the eigenvalues
+    return my_model.components_ # Return the eigenvalues
 
-def getAndSaveCodebook(descriptors,num_samples,k,filename,doPCA):
+def getAndSaveCodebook(descriptors,num_samples,k,filename,doPCA, pca_ncomponents):
     size_descriptors=descriptors[0].shape[1]
     A=np.zeros((num_samples,size_descriptors),dtype=np.float32)
     for i in range(num_samples):
         A[i,:]=random.choice(random.choice(descriptors))
 
-	#Perform a dimensionality reduction before K Means
+    #Perform a dimensionality reduction before K Means
     if doPCA == True:
-        A = computePCA(A,1)
+        A = computePCA(A,0, pca_ncomponents)
 
     print 'Computing kmeans on '+str(num_samples)+' samples with '+str(k)+' centroids'
     init=time.time()

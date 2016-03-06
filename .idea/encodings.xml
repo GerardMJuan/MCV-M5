@@ -2,6 +2,7 @@
 <project version="4">
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/Tools/04_Early_Fusion.py" charset="windows-1252" />
+    <file url="file://$PROJECT_DIR$/Tools/early_fusion_experiments.py" charset="windows-1252" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>

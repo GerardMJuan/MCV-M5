@@ -4,7 +4,7 @@ from sklearn.metrics import roc_curve, auc
 if __name__ == '__main__':
 
 
-    detector=['SIFT','Dense','SURF','ORB','FAST','MSER','HARRIS']
+    detector=['SIFT','DENSE','SURF','ORB','FAST','HARRIS','MSER']
     descriptor='SIFT'
     num_samples=50000
 
@@ -20,6 +20,7 @@ if __name__ == '__main__':
     start=0.001
     end=10
     numparams=30
+    doPCA = True # Do PCA before K Means
 
     classifier='LinearSVM' # Choose between KNN and linearSVM
     # Name of the accuracy file
@@ -42,7 +43,7 @@ if __name__ == '__main__':
 
               filenames_train,GT_ids_train,GT_labels_train = prepareFiles('../MIT_split/train/')
               KPTS_train,DSC_train = getKeypointsDescriptors(filenames_train,detector[j],descriptor)
-              CB=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename)
+              CB=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename,doPCA)
               #CB=cPickle.load(open(codebook_filename,'r'))
 
               VW_train=getAndSaveBoVWRepresentation(DSC_train,k,CB,visual_words_filename_train)

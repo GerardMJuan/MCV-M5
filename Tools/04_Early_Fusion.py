@@ -1,4 +1,5 @@
 from BOVW_functions import *
+from sklearn.decomposition import PCA
 
 ##########################
 #PARAMETROS DE EJECUCION
@@ -10,13 +11,13 @@ detector='SIFT'#'Dense'
 descriptor='SIFT'
 # NUmero de puntos de interEs que se utilizan para obtener el vocabulario visual
 num_samples=50000
-# Numero de palabras en el vocabulario visual
-k=5000
-# Factor de regularizacien C para entrenar el clasificador SVM
-C=0.1
-# Directorio raiz donde se encuentran todas las imagenes de aprendizaje
+# NUmero de palabras en el vocabulario visual
+k=32
+# Factor de regularizaciOn C para entrenar el clasificador SVM
+C=1
+# Directorio raiz donde se encuentran todas las imAgenes de aprendizaje
 dataset_folder_train='../MIT_split/train/'
-# Directorio raiz donde se encuentran todas las imagenes de test
+# Directorio raiz donde se encuentran todas las imAgenes de test
 dataset_folder_test='../MIT_split/test/'
 
 doPCA = True # Do PCA before K Means
@@ -24,6 +25,7 @@ doPCA = True # Do PCA before K Means
 #Modo de experimentacion. 0 = rehacer experimentos, 1 = cargar datos ya guardados.
 use_precalc_voc = 0
 
+##############################################
 
 
 # PreparaciOn de los nombres de los ficheros necesarios para guardar el vocabulario y las palabras visuales de las imAgenes de aprendizaje y test
@@ -55,9 +57,9 @@ for i in range(len(DSC_train)):
 # ConstrucciOn de los 3 vocabularios visuales: SIFT, Color y Early fusion. Los vocabularios quedan guardados en disco.
 # Comentar estas lIneas si los vocabularios ya estAn creados y guardados en disco de una ejecuciOn anterior
 if use_precalc_voc == 0:
-	CB_SIFT=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename_SIFT, doPCA)
-	CB_COLOR=getAndSaveCodebook(CDSC_train, num_samples, k, codebook_filename_COLOR, doPCA)
-	CB_EARLY=getAndSaveCodebook(FDSC_train, num_samples, k, codebook_filename_EARLY, doPCA)
+	CB_SIFT=getAndSaveCodebook(DSC_train, num_samples, k, codebook_filename_SIFT, doPCA, cfg.pca_ncomponents_sift)
+	CB_COLOR=getAndSaveCodebook(CDSC_train, num_samples, k, codebook_filename_COLOR, doPCA, cfg.pca_ncomponents_color)
+	CB_EARLY=getAndSaveCodebook(FDSC_train, num_samples, k, codebook_filename_EARLY, doPCA, cfg.pca_ncomponents_earlyf)
 
 # Carga de los vocabularios visuales previamente creados y guardados en disco en una ejecuciOn anterior.
 # Comentar estas lIneas si se quiere re-calcular los vocabularios o si los vocabularios todavIa no se han creado

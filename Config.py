@@ -16,4 +16,7 @@ hog_cells_per_block_total = hog_cells_per_block[0]*hog_cells_per_block[1]
 hog_normalise = True
 
 # PCA Parameters
-pca_ncomponents = 80
+pca_ncomponents = 80# PCA Parameters
+pca_ncomponents_sift = 15
+pca_ncomponents_color = 10
+pca_ncomponents_earlyf = 80
