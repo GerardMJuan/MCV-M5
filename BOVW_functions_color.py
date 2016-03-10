@@ -9,7 +9,7 @@ import random
 from PIL import Image
 import scipy.cluster.vq as vq
 from sklearn import cross_validation
-from sklearn import svm, mixture
+from sklearn import svm
 from sklearn import neighbors
 from sklearn.grid_search import GridSearchCV
 from sklearn.preprocessing import StandardScaler
@@ -18,8 +18,10 @@ from skimage.feature import local_binary_pattern
 from skimage.util import view_as_windows
 from sklearn.metrics import confusion_matrix, roc_curve, auc
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import label_binarize, LabelBinarizer,normalize
+from sklearn.preprocessing import label_binarize, LabelBinarizer
 from sklearn.multiclass import OneVsRestClassifier
+from joblib import Parallel, delayed
+from joblib import load, dump
 from scipy import interp
 import ColorNaming as cnam
 
@@ -41,33 +43,45 @@ def prepareFiles(rootpath):
 
 def getKeypointsDescriptors(filenames,detector_type,descriptor_type):
     detector=cv2.FeatureDetector_create(detector_type)
-    if not (descriptor_type == 'HOG' or descriptor_type == 'LBP'):
-        descriptor = cv2.DescriptorExtractor_create(descriptor_type)
-    K = []
-    D = []
-    print 'Extracting Local Descriptors'
-    init=time.time()
-    for filename in filenames:
-        ima=cv2.imread(filename)
-        gray=cv2.cvtColor(ima,cv2.COLOR_BGR2GRAY)
-        if descriptor_type == 'HOG':
-            des = extractHOGfeatures(gray, detector)
-            D.append(des)
-        elif descriptor_type == 'LBP':
-            des = extractLBPfeatures(gray, detector)
-            D.append(des)
-        else:
+    if not(descriptor_type == 'color'):
+        if not (descriptor_type == 'HOG' or descriptor_type == 'LBP'):
+            descriptor = cv2.DescriptorExtractor_create(descriptor_type)
+        K = []
+        D = []
+        print 'Extracting Local Descriptors'
+        init=time.time()
+        for filename in filenames:
+            ima=cv2.imread(filename)
+            gray=cv2.cvtColor(ima,cv2.COLOR_BGR2GRAY)
+            if descriptor_type == 'HOG':
+                des = extractHOGfeatures(gray, detector)
+                D.append(des)
+            elif descriptor_type == 'LBP':
+                des = extractLBPfeatures(gray, detector)
+                D.append(des)
+            else:
+                kpts=detector.detect(gray)
+                kpts,des=descriptor.compute(gray,kpts)
+                K.append(kpts)
+                D.append(des)
+
+        end=time.time()
+
+        print 'Done in '+str(end-init)+' secs.'
+    if(descriptor_type == 'color'):
+        K = []
+        print 'Extracting Local Descriptors'
+        init=time.time()
+        for filename in filenames:
+            ima=cv2.imread(filename)
+            gray=cv2.cvtColor(ima,cv2.COLOR_BGR2GRAY)
             kpts=detector.detect(gray)
-            kpts,des=descriptor.compute(gray,kpts)
-            #des.dtype = 'float64'
             K.append(kpts)
-            #des = normalize(des,norm='l1')
-            D.append(des)
-
-    end=time.time()
-
-    print 'Done in '+str(end-init)+' secs.'
+        D = getLocalColorDescriptors(filenames, K, 0)
     return(K,D)
+
+
+
 
 def extractLBPfeatures(img, detector):
     lbp = local_binary_pattern(img, cfg.lbp_n_points, cfg.lbp_radius, cfg.lbp_METHOD)
@@ -102,7 +116,6 @@ def extractHOGfeatures(img, detector):
     loc = [(int(x.pt[0]),int(x.pt[1])) for x in kpts]
     loc = tuple(loc)
     fd = hog.compute(img,hog.blockStride,hog.cellSize,loc)
-
     #fd = hog(img,
     #         orientations=cfg.hog_orientations,
     #         pixels_per_cell=cfg.hog_pixels_per_cell,
@@ -119,22 +132,9 @@ def getLocalColorDescriptors(filenames, keypoints, colormode):
     cont=0
     for filename in filenames:
         if colormode == 0:
-            kpts=keypoints[cont]
-            loc = [[int(x.pt[0]), int(x.pt[1])] for x in kpts]
-            loc = np.array(loc)
             ima=cv2.imread(filename)
-            cdesc = cnam.ImColorNamingTSELabDescriptor(ima,loc)
-            #w,h,_=ima.shape
-            #cont2=0
-            #for k in kpts:
-
-            #    window = ima[max(0,k.pt[0] - area*k.size):min(w,k.pt[0] + area*k.size),max(0,k.pt[1] - area*k.size):min(h,k.pt[1] + area*k.size)]
-            #    window = np.array(window)
-            #    window = cnam.getColorNamingDescriptor(window)
-            #    window = window.flatten()
-            #    cdesc[cont2,:]=window
-            #    cont2+=1
-            cont+=1
+            hls=cv2.cvtColor(ima,cv2.COLOR_BGR2HLS)
+            cdesc = cnam.getColorNamingDescriptor(hls)
         else:
             kpts=keypoints[cont]
             cdesc=np.zeros((len(kpts),n_bins),dtype=np.float32)
@@ -201,43 +201,12 @@ def getAndSaveCodebook(descriptors,num_samples,k,filename,doPCA, pca_ncomponents
     cPickle.dump(codebook, open(filename, "wb"))
     return codebook
 
-def getAndSaveCodebook_GMM(descriptors,num_samples,k,filename,doPCA, pca_ncomponents):
-    size_descriptors=descriptors[0].shape[1]
-    if doPCA == True:
-        A = computePCA(descriptors,0, pca_ncomponents)
-    A=np.zeros((num_samples,size_descriptors),dtype=np.float32)
-    for i in range(num_samples):
-        A[i,:]=random.choice(random.choice(descriptors))
-    print 'Computing GMM on '+str(num_samples)+' samples with '+str(k)+' mixture components'
-    init=time.time()
-    A = vq.whiten(A)
-
-    # GMM Computation
-    g = mixture.GMM(n_components=k)
-    codebook = g.fit(A)
-    end=time.time()
-    print 'Done in '+str(end-init)+' secs.'
-    cPickle.dump(codebook, open(filename, "wb"))
-    return codebook
-
 def getAndSaveBoVWRepresentation(descriptors,k,codebook,filename):
     print 'Extracting visual word representations'
     init=time.time()
     visual_words=np.zeros((len(descriptors),k),dtype=np.float32)
     for i in xrange(len(descriptors)):
         words,distance=vq.vq(descriptors[i],codebook)
-        visual_words[i,:]=np.bincount(words,minlength=k)
-    end=time.time()
-    print 'Done in '+str(end-init)+' secs.'
-    cPickle.dump(visual_words, open(filename, "wb"))
-    return visual_words
-
-def getAndSaveBoVWRepresentation_GMM(descriptors,k,gmm,filename):
-    print 'Extracting visual word representations'
-    init=time.time()
-    visual_words=np.zeros((len(descriptors),k),dtype=np.float32)
-    for i in xrange(len(descriptors)):
-        words = gmm.predict(descriptors[i])
         visual_words[i,:]=np.bincount(words,minlength=k)
     end=time.time()
     print 'Done in '+str(end-init)+' secs.'
@@ -366,7 +335,7 @@ def trainAndTestLinearSVM_withfolds(train,test,GT_train,GT_test,folds,start,end,
     train = stdSlr.transform(train)
     kernelMatrix = histogramIntersection(train, train)
     tuned_parameters = [{'kernel': ['linear'], 'C':np.linspace(start,end,num=numparams)}]
-    clf = GridSearchCV(svm.SVC(kernel='linear',decision_function_shape='ovr'), tuned_parameters, cv=folds,scoring='accuracy',n_jobs = 8)
+    clf = GridSearchCV(svm.SVC(kernel='linear',decision_function_shape='ovr'), tuned_parameters, cv=folds,scoring='accuracy',n_jobs = 6)
     clf.fit(kernelMatrix, GT_train)
     print(clf.best_params_)
     predictMatrix = histogramIntersection(stdSlr.transform(test), train)

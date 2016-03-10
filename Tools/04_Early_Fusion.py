@@ -99,9 +99,9 @@ if __name__ == '__main__':
 	# Entrena un clasificador SVM con las imAgenes del conjunto de aprendizaje y lo evalUa utilizando las imAgenes del conjunto de test
 	# para las 3 descripciones (SIFT, color y early fusion)
 	# Devuelve la accuracy como medida del rendimiento del clasificador
-	ac_BOVW_SIFT = trainAndTestLinearSVM(VW_SIFT_train,VW_SIFT_test,GT_ids_train,GT_ids_test,C)
-	ac_BOVW_COLOR = trainAndTestLinearSVM(VW_COLOR_train,VW_COLOR_test,GT_ids_train,GT_ids_test,C)
-	ac_BOVW_EF = trainAndTestLinearSVM(VW_FUSION_train,VW_FUSION_test,GT_ids_train,GT_ids_test,C)
+	ac_BOVW_SIFT,cm,fpr,tpr,roc_auc = trainAndTestLinearSVM(VW_SIFT_train,VW_SIFT_test,GT_ids_train,GT_ids_test,C)
+	ac_BOVW_COLOR,cm,fpr,tpr,roc_auc = trainAndTestLinearSVM(VW_COLOR_train,VW_COLOR_test,GT_ids_train,GT_ids_test,C)
+	ac_BOVW_EF,cm,fpr,tpr,roc_auc = trainAndTestLinearSVM(VW_FUSION_train,VW_FUSION_test,GT_ids_train,GT_ids_test,C)
 
 
 	print 'Accuracy BOVW with LinearSVM SIFT: '+str(ac_BOVW_SIFT)

@@ -4,7 +4,7 @@ from sklearn.metrics import roc_curve, auc
 if __name__ == '__main__':
 
 
-    detector=['HARRIS']
+    detector=['FAST']
     descriptor='SIFT'
     num_samples=50000
 
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     y_total_acc = []
 
     folds = 5
-    start=0.001
+    start=0.0001
     end=10
     numparams=30
     doPCA = False # Do PCA before K Means
@@ -64,10 +64,36 @@ if __name__ == '__main__':
 
               names = unique_elements(GT_labels_test)
               # Name of the confusion matrix file
-              savename = str(folds) + 'hog_lin.png'
+              savename = str(folds) + 'FINAL_lin.png'
               plot_confusion_matrix(cm,names,savename)
               s = 'For ' + detector[j] + ' The accuracy is ' + str(ac_BOVW_L) + '\n'
               text_file.write(s)
+              save = str(folds) +'FINAL_ROC.png'
+
+              plt.figure()
+              plt.plot(fpr["macro"], tpr["macro"],
+                     label='macro-average ROC curve (area = {0:0.2f})'
+                           ''.format(roc_auc["macro"]),
+                     linewidth=2)
+
+              for i in range(8):
+                    plt.plot(fpr[i], tpr[i], label='ROC curve of class {0} (area = {1:0.2f})'
+                                                   ''.format(i, roc_auc[i]))
+
+              plt.plot([0, 1], [0, 1], 'k--')
+              plt.xlim([0.0, 1.0])
+              plt.ylim([0.0, 1.05])
+              plt.xlabel('False Positive Rate')
+              plt.ylabel('True Positive Rate')
+              plt.title('Some extension of Receiver operating characteristic to multi-class')
+              plt.legend(loc="lower right")
+              plt.savefig(save)
+              plt.close()
+
+
+
+
+
     if lookfor_k == 1:
         plt.figure()
         plt.plot(x_total_k, y_total_acc)

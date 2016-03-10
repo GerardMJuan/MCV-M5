@@ -17,6 +17,6 @@ hog_normalise = True
 
 # PCA Parameters
 pca_ncomponents = 80# PCA Parameters
-pca_ncomponents_sift = 15
-pca_ncomponents_color = 10
-pca_ncomponents_earlyf = 80
+pca_ncomponents_sift = 'mle'
+pca_ncomponents_color ='mle'
+pca_ncomponents_earlyf = 'mle'
